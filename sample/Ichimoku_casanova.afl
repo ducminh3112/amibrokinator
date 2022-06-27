@@ -1,0 +1,1099 @@
+
+_SECTION_BEGIN("Price1");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+_N(Title = StrFormat("{{NAME}} - {{INTERVAL}} {{DATE}} Open %g, Hi %g, Lo %g, Close %g (%.1f%%) {{VALUES}}", O, H, L, C, SelectedValue( ROC( C, 1 ) ) ));
+
+_SECTION_END();
+
+
+_SECTION_BEGIN("BD VOZ");
+
+
+VAR2=(High+Low+(Close)*(2))/(4);
+B = ((EMA((VAR2-LLV(VAR2,15))/(HHV(Low,15)-LLV(VAR2,15)),2))*(38));
+//Plot(b, "", 4, 1); //Plot(b, "", 4, 1+4);
+bot1 = ((((-1))*(EMA((VAR2-LLV(VAR2,15))/(HHV(Low,15)-LLV(VAR2,15)),2))+0.01)*(38));
+//Plot(bot1, "", 4, 1);//Plot(bot1, "", 4, 1+4);
+VAR22=((Close-LLV(Low,10))/(HHV(High,10)-LLV(Low,10)))*(100);
+VAR33=EMA(VAR22,10);
+VAR44=EMA(VAR33,10);
+VAR55=(3)*(VAR33)-(2)*(VAR44);
+VAR66=EMA(VAR55,5);
+BridgeT = (EMA(VAR66,1));
+
+lb=Param("lback",27,27,100,1);
+trend = (5)*(EMA(((Close-LLV(Low,lb))/(HHV(High,lb)-LLV(Low,lb)))*(100),5))-
+(3)*(EMA(EMA(((Close-LLV(Low,lb))/(HHV(High,lb)-LLV(Low,lb)))*(100),5),3))-
+EMA(EMA(EMA(((Close-LLV(Low,lb))/(HHV(High,lb)-LLV(Low,lb)))*(100),5),3),2);
+Buy1 = Cross(trend,5);
+
+
+VARA1=((Close>=Ref(Close,-1)) AND (Ref(Close,-1)>=Ref(Close,-2)) AND (Ref(Close,-1)<=Ref(Close,-3)) 
+AND (Ref(Close,-2)<=Ref(Close,-3)) AND ((Ref(Close,-4)>Ref(Close,-2)) OR (Ref(Close,-4)<=Ref(Close,-2)) 
+AND (Ref(Close,-5)>=Ref(Close,-3)))) OR ((Close>=Ref(Close,-1)) AND (Ref(Close,-1)<=Ref(Close,-2)) 
+AND (Close>=Ref(Close,-2)) AND ((Ref(Close,-3)>Ref(Close,-1)) OR (Ref(Close,-3)<=Ref(Close,-1)) 
+AND (Ref(Close,-4)>=Ref(Close,-2))));
+VARA2=LLV(Low,5);
+VARA3=HHV(High,5);
+VARA4=EMA(((Close-VARA2)/(VARA3-VARA2))*(100),4);
+VARA5=EMA((0.66699999)*(Ref(VARA4,-1))+(0.333)*(VARA4),2);
+VARA6=(VARA5<24) AND (Open<MA(Close,20));
+
+Buy2 =IIf(VARA1 AND (VARA6),30,0);
+
+
+
+
+_SECTION_BEGIN("ichimoku");
+/* ICHIMOKU CHART */
+n1 = Param("period 1", 9,1,200,1); 
+n2 = Param("period 2", 26 ,1,400,1); 
+n3 = Param("period 3", 52, 1,600,1); 
+TF_1 = inDaily;
+TF_2 = inWeekly;
+TenkanSen   =(HHV(H,n1)+LLV(L,n1))/2;          
+KijunSen    =(HHV(H,n2)+LLV(L,n2))/2;            
+ChinkouSpan =Ref(C,-23);     
+Cks= Close;                   
+SenkouSpanA =Ref((KijunSen+TenkanSen)/2,-n2);  
+SpA         =(KijunSen+TenkanSen)/2;            
+SenkouSpanB =Ref((HHV(H,n3)+LLV(L,n3))/2,-n2);  
+SpB         =(HHV(H,n3)+LLV(L,n3))/2;         
+//PlotOHLC (SpA,SpA,SpB,SpB,"Cloud",IIf (SpA > SpB,ColorRGB( 64, 128, 128 ),ColorRGB( 128, 128, 128 )),styleCloud, 10, 10, n2 ); 
+TimeFrameSet(TF_2);
+TenkanSenw  =(HHV(H,n1)+LLV(L,n1))/2;          
+KijunSenw    =(HHV(H,n2)+LLV(L,n2))/2;
+spaw=(KijunSenw+TenkanSenw)/2; 
+spbw=(HHV(H,n3)+LLV(L,n3))/2;
+SenkouSpanAw=Ref(spaw,-n2);
+SenkouSpanBw=Ref(spbw,-n2);
+nentuan=C;
+TimeFrameRestore();
+
+pricew=TimeFrameExpand(nentuan,TF_2);
+ChinkouSpanw =Ref(pricew,-23); 
+tkw=TimeFrameExpand(TenkanSenw,TF_2);
+kjw=TimeFrameExpand(KijunSenw,TF_2);
+spanaweek=TimeFrameExpand(spaw,TF_2);
+spanbweek=TimeFrameExpand(spbw,TF_2);
+spanaw=TimeFrameExpand(SenkouSpanAw,TF_2);
+spanbw=TimeFrameExpand(SenkouSpanBw,TF_2);
+//PlotOHLC (spanaweek,spanaweek,spanbweek,spanbweek,"Cloud",IIf (spanaweek > spanbweek,ColorRGB( 64, 128, 128 ),ColorRGB( 128, 128, 128 )),styleCloud, 10, 10, n2 );
+maytuanxanh=IIf(spanaweek>spanbweek,1,0);
+maytuando=IIf(spanaweek<spanbweek,1,0);
+
+Cond1w =  Ref(pricew > Max(spanaw,spanbw),0);  
+Cond2w =  Ref(Close < Min(spanaw,spanbw),0);  
+Cond3w =  Ref(Cross(tkw,kjw),0);  
+Cond4w =  Ref(Cross(kjw,tkw),0); 
+Cond5w =  Ref(Cross(Close,ChinkouSpanw ),0); 
+Cond6w =  Ref(Cross(ChinkouSpanw ,Close),0); 
+Cond7w =  Ref(Cross (Close , Max(spanaw,spanbw)),0);  
+Cond8w =  Ref(Cross ( Min(spanaw,spanbw), Close),0);  
+Cond9w = Close > tkw AND tkw > kjw AND kjw > Max(spanaw,spanbw); 
+Cond10w= Close < tkw AND tkw < kjw AND kjw < Min(spanaw,spanbw);
+RemCond9w=ExRem(Cond9w,NOT Cond9w);                  
+RemCond10w=ExRem(Cond10w,NOT Cond10w); 
+
+//PlotOHLC (spanaweek,spanaweek,spanbweek,spanbweek,"Cloud",IIf (spanaweek > spanbweek,ColorRGB( 64, 128, 128 ),ColorRGB( 128, 128, 128 )),styleCloud,10, 10, n2 ); 
+
+  
+Cond1 =  Ref(Close > Max(SenkouSpanA,SenkouSpanB),0);  
+Cond2 =  Ref(Close < Min(SenkouSpanA,SenkouSpanB),0);  
+Cond3 =  Ref(Cross(TenkanSen,KijunSen),0);  
+Cond4 =  Ref(Cross(KijunSen,TenkanSen),0); 
+Cond5 =  Ref(Cross(Close,ChinkouSpan ),0); 
+Cond6 =  Ref(Cross(ChinkouSpan ,Close),0); 
+Cond7 =  Ref(Cross (Close , Max(SenkouSpanA,SenkouSpanB)),0);  
+Cond8 =  Ref(Cross ( Min(SenkouSpanA,SenkouSpanB), Close),0);  
+Cond9 = Close > TenkanSen AND TenkanSen > KijunSen AND KijunSen > Max(SenkouSpanA,SenkouSpanB); 
+Cond10= Close < TenkanSen AND TenkanSen < KijunSen AND KijunSen < Min(SenkouSpanA,SenkouSpanB);
+RemCond9=ExRem(Cond9,NOT Cond9);                  
+RemCond10=ExRem(Cond10,NOT Cond10); 
+ 
+ColSenk =IIf (Cond1,colorGreen, IIf(Cond2,colorRed,colorLightGrey));
+Flat  =  TenkanSen == Ref(TenkanSen,-1) OR (NOT(Cond1) AND NOT(Cond2)) ; 
+ 
+for( i = 0; i < BarCount; i++ ) 
+{ 
+   if (Flat[i]) 
+      ColTenk[i] = colorLightGrey; 
+   else
+   { 
+if (Cond1[i] AND TenkanSen[i] > TenkanSen[i-1]) 
+     ColTenk[i] = colorGreen; 
+if (Cond1[i] AND TenkanSen[i] < TenkanSen[i-1]) 
+     ColTenk[i] = colorRed; 
+if (Cond2[i] AND TenkanSen[i] < TenkanSen[i-1]) 
+     ColTenk[i] = colorRed; 
+if (Cond2[i] AND TenkanSen[i] > TenkanSen[i-1]) 
+     ColTenk[i] = colorGreen; 
+   } 
+} 
+ 
+
+per1=Param("phan tram tk cross xa may",10,1,100,1);
+per2=Param("may day hay mong",10,1,100,1);
+per3=Param("chu ki di+",14,1,100,1);
+chenhlechdmi=Param("chenh lech dmi",3,0.5,100,0.01);
+dkmdi=IIf(MDI(per3) > PDI(per3) AND MDI(per3)-PDI(per3) < chenhlechdmi, 1,0);
+Spa1 =Ref((KijunSen+TenkanSen)/2,-n2+1);
+ Spa2 =Ref((KijunSen+TenkanSen)/2,-n2+2);
+ Spa3 =Ref((KijunSen+TenkanSen)/2,-n2+3);
+ Spa4 =Ref((KijunSen+TenkanSen)/2,-n2+4);
+  Spa5 =Ref((KijunSen+TenkanSen)/2,-n2+5);
+spb1 =Ref((HHV(H,n3)+LLV(L,n3))/2,-n2+1);  
+  spb2 =Ref((HHV(H,n3)+LLV(L,n3))/2,-n2 +2);  
+  spb3 =Ref((HHV(H,n3)+LLV(L,n3))/2,-n2+3);  
+  spb4 =Ref((HHV(H,n3)+LLV(L,n3))/2,-n2+4);  
+  spb5 =Ref((HHV(H,n3)+LLV(L,n3))/2,-n2+5);  
+ minspa=Min(spa1,Min(spa2,Min(spa3,Min(spa4,spa5))));
+ minspb=Min(spb1,Min(spb2,Min(spb3,Min(spb4,spb5))));
+ Minmay=Min(minspa,minspb);
+a=ValueWhen(Cross(TenkanSen,KijunSen),TenkanSen,1);
+dktrongmay = IIf( a <= Max(SenkouSpanA,SenkouSpanB) AND a >= Min(SenkouSpanA,SenkouSpanB),1,0);
+trenmay= Ref(Max(SenkouSpanA,SenkouSpanB),-1);
+duoimay= Ref(Min(SenkouSpanA,SenkouSpanB),-1);
+trenmayw= Ref(Max(spanaw,spanbw),-1);
+duoimayw= Ref(Min(spanaw,spanbw),-1);
+ganmay=IIf(abs(100*(a-Max(SenkouSpanA,SenkouSpanB)))/Max(SenkouSpanA,SenkouSpanB)<10,1,0);
+dkduoimay=IIf(a<Min(SenkouSpanA,SenkouSpanB) AND 100*(Min(SenkouSpanA,SenkouSpanB)-a)/(Min(SenkouSpanA,SenkouSpanB)) < per1,1,
+  IIf(a<Min(SenkouSpanA,SenkouSpanB) AND 100*(Min(SenkouSpanA,SenkouSpanB)-a)/(Min(SenkouSpanA,SenkouSpanB)) > per1 AND 
+ 100*(Min(minspa,minspb)-a)/(Min(minspa,minspb)) < per1 ,1 , 0));
+bullish= IIf(SpA>SpB,1,0);
+bearish= IIf(SpB>SpA,1,0);
+maytuanxanh=IIf(spanaweek>spanbweek,1,0);
+maytuando=IIf(spanaweek<spanbweek,1,0);
+withincw= IIf(pricew<cond1w AND pricew>cond2w,1,0);
+withinc=IIf(C< trenmay AND C > duoimay,1,0);
+// xet chikou free
+chikoufree= IIf(Cks > ChinkouSpan,1,0); //cks la C ve lui 23 phien . chikouspan la gia tai 23 phien truoc.
+///////////////////
+abovew = IIf((kjw>=trenmayw AND tkw>=trenmayw),1,0);
+withinw = IIf((kjw >= duoimayw AND tkw >= duoimayw AND kjw <= trenmayw  AND tkw <= trenmayw),1,0);
+beloww = IIf((tkw <= duoimayw AND kjw <= duoimayw),1,0);
+
+
+above = IIf((KijunSen>=trenmay AND TenkanSen>=trenmay),1,0);
+within = IIf((KijunSen >= duoimay AND TenkanSen >= duoimay AND KijunSen <= trenmay  AND TenkanSen <= trenmay),1,0);
+below = IIf((TenkanSen <= duoimay AND kijunSen <= duoimay),1,0);
+// tin hieu mua ban khi tenkansen cat len xuong kijunsen ///////////////////////////////////
+Buystrongtkcross = Cond3 AND C > TenkanSen AND above AND ganmay  ; //AND ((PDI(per3) > MDI(per3) ) OR (MDI(per3)> PDI(per3) AND MDI(per3)-PDI(per3) < chenhlechdmi));// AND DL>C;//////////cond3 la tenkan cat len kijun
+sellstrongtkcross = Cond4 AND  below;//////////////////cond4 la tenkan cat xuong 
+Buymediumtkcross = Cond3 AND C > TenkanSen AND within ;//AND dkmaymong ;//AND ((PDI(per3) > MDI(per3) ) OR (MDI(per3)> PDI(per3) AND MDI(per3)-PDI(per3) < chenhlechdmi));//AND DL>C;/////////
+sellmediumtkcross = Cond4 AND  within;/////////////////
+Buyweaktkcross = Cond3 AND below and dkduoimay; // AND ((PDI(per3) > MDI(per3) ) OR (MDI(per3)> PDI(per3) AND MDI(per3)-PDI(per3) < chenhlechdmi));
+//////////////////
+Buystrongtkcrossw = Cond3w AND pricew>tkw AND abovew   ; //AND ((PDI(per3) > MDI(per3) ) OR (MDI(per3)> PDI(per3) AND MDI(per3)-PDI(per3) < chenhlechdmi));// AND DL>C;//////////cond3 la tenkan cat len kijun
+sellstrongtkcrossw = Cond4w AND  beloww;//////////////////cond4 la tenkan cat xuong 
+Buymediumtkcrossw = Cond3w AND pricew>tkw AND withinw ;//AND dkmaymong ;//AND ((PDI(per3) > MDI(per3) ) OR (MDI(per3)> PDI(per3) AND MDI(per3)-PDI(per3) < chenhlechdmi));//AND DL>C;/////////
+sellmediumtkcrossw = Cond4w AND  withinw;/////////////////
+Buyweaktkcrossw = Cond3w AND beloww ; // AND ((PDI(per3) > MDI(per3) ) OR (MDI(per3)> PDI(per3) AND MDI(per3)-PDI(per3) < chenhlechdmi));
+
+//// 
+////////////////////////////////////////////////////////////////////////////////////////////
+/*Cond1 =  Ref(Close > Max(SenkouSpanA,SenkouSpanB),-1);  
+Cond2 =  Ref(Close < Min(SenkouSpanA,SenkouSpanB),-1);  
+Cond3 =  Ref(Cross(TenkanSen,KijunSen),-1);  
+Cond4 =  Ref(Cross(KijunSen,TenkanSen),-1); 
+Cond5 =  Ref(Cross(Close,ChinkouSpan ),-1); 
+Cond6 =  Ref(Cross(ChinkouSpan ,Close),-1); 
+Cond7 =  Ref(Cross (Close , Max(SenkouSpanA,SenkouSpanB)),-1);  
+Cond8 =  Ref(Cross ( Min(SenkouSpanA,SenkouSpanB), Close),-1);  
+Cond9 = Close > TenkanSen AND TenkanSen > KijunSen AND KijunSen > Max(SenkouSpanA,SenkouSpanB); 
+Cond10= Close < TenkanSen AND TenkanSen < KijunSen AND KijunSen < Min(SenkouSpanA,SenkouSpanB);*/
+// tin hieu mua ban khi gia cat len xuong may kumo		 ///////////////////////////////////
+dk1=IIf(Cond1,1,0);
+dk2=IIf(Cond2,1,0);
+dk3=IIf(Cond3,1,0);
+dk4=IIf(Cond4,1,0);
+dk5=IIf(Cond5,1,0);
+dk6=IIf(Cond6,1,0);
+dk7=IIf(Cond7,1,0);
+dk8=IIf(Cond8,1,0);
+diemmuasom = IIf( (tenkansen >= Max(Ref(tenkansen,-1), Max(Ref(tenkansen,-2),Max (Ref(tenkansen,-3),Ref(tenkansen,-4))))) AND ((tenkansen >= 0.96 *kijunsen AND tenkansen <= 0.99*kijunsen) OR (tenkansen==kijunsen)), 1,0);
+buysom= diemmuasom AND PDI(14) > Ref(PDI(14),-1) ;
+
+dkm=IIf((C>=SenkouSpanA AND C<=SenkouSpanB),1,0) OR IIf((C>=SenkouSpanB AND C<=SenkouSpanA),1,0); // GIA NAM GIUA MAY
+Buypcross= dk7;//Cond7 =  Ref(Cross (Close , Max(SenkouSpanA,SenkouSpanB)),-1);  
+Sellpcross= dk8;//Cond8 =  Ref(Cross ( Min(SenkouSpanA,SenkouSpanB), Close),-1);  
+Buypcrossw= cond7w;//Cond7 =  Ref(Cross (Close , Max(SenkouSpanA,SenkouSpanB)),-1);  
+Sellpcrossw= cond8w;//Cond8 =  Ref(Cross ( Min(SenkouSpanA,SenkouSpanB), Close),-1);  
+////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////// gia cat len xuong kijunsen ////////////////////////////////
+BuyStrongPriceCross = Cross(C,KijunSen) AND (C >= TenkanSen) AND (TenkanSen > KijunSen) AND above AND dk1 ;
+BuyStrongPriceCrossw = Cross(pricew,kjw) AND (pricew >= tkw) AND (tkw > kjw) AND abovew AND cond1w ;// mua manh gia cat kijunsen , gia > tenkansen 
+SellWeakPriceCross = Cross(KijunSen,C) AND above AND dk1;
+SellNeutralPriceCross = Cross(KijunSen,C) AND within AND dkm; // dkm la dieu kien medium
+SellStrongPriceCross = Cross(KijunSen,C) AND below AND dk2 ; // dau hieu ban manh
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////TIN HIEU MUA BAN KHI SPA VA SPB CAT NHAU ///////////////////////////
+buystrongsenkouspancross = dk1 AND Cross(SenkouSpanA,SenkouSpanB);
+buystrongsenkouspancrossw = cond1w AND Cross(spanaw,spanbw);
+sellstrongsenkouspancross= dk2 AND Cross (SenkouSpanB,SenkouSpanA);
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////
+////////////		     tin hieu mua ban khi chikouspan cross					////////////
+BuyStrongChikouSpanCross = dk1 AND dk6 AND C > TenkanSen;
+BuyStrongChikouSpanCrossw = cond1w AND cond6w AND pricew > tkw;
+sellchikouspancross= dk2 AND dk5;
+
+
+//dkmaymong
+////////////////dk dong hanh hoi tu ma5 tk kj cach nhau ko qua 7%
+var1=0;
+ma5=MA(C,5);
+//min1= Min(a,ma5);
+//max1=Max(a,ma5);
+var1=  (abs(a-ma5)*100/ma5) ; // chenh lech var1 % 
+////////////// adx ////////
+adx1=IIf(PDI(14) > MDI(14), 1,0);
+adx2=IIf(MDI(14) > PDI(14) AND MDI(14)-PDI(14)<=3 ,1,0);
+dkadx= adx1 OR adx2 ;
+///////////////////////////dk may mong//////////////
+dkmaymong= (100*(Max(SenkouSpanA,SenkouSpanB)-Min(SenkouSpanA,SenkouSpanB))/(Min(SenkouSpanA,SenkouSpanB)) < 14);
+//////////gan may////////////////////////////////////
+nhohonmay=IIf(abs(100*(C-Max(SenkouSpanA,SenkouSpanB)))/Max(SenkouSpanA,SenkouSpanB)<10,1,0);
+////////////////////////
+dkduoimay=IIf(a<Min(SenkouSpanA,SenkouSpanB) AND 100*(Min(SenkouSpanA,SenkouSpanB)-a)/(Min(SenkouSpanA,SenkouSpanB)) < per1,1,
+  IIf(a<Min(SenkouSpanA,SenkouSpanB) AND 100*(Min(SenkouSpanA,SenkouSpanB)-a)/(Min(SenkouSpanA,SenkouSpanB)) > per1 AND 
+ 100*(Min(minspa,minspb)-a)/(Min(minspa,minspb)) < per1 ,1 , 0));
+
+///////////////////////////////////////////
+rsicatlen=Cross(RSI(14),30);
+uptrend=RSI(14) >50 AND RSI(14)<70 ;
+max5phien= HHV(RSI(14),5);
+
+
+
+
+
+
+
+
+
+
+
+dieukien= Buystrongtkcross OR Buymediumtkcross OR Buyweaktkcross AND V>20000 AND C*V > 2000000 ; 
+dieukien2= Cond7 AND C> kijunsen AND (C> Ref(C,-23) OR Cross(C,Ref(C,-23))) AND V>20000 AND C*V > 2000000 ; 
+
+dieukienw= Buystrongtkcrossw OR Buymediumtkcrossw OR Buyweaktkcrossw AND V>100000 AND C*V > 10000000 ; 
+dieukien2w= Cond7w AND pricew> kjw; //AND (pricew> Ref(pricew,-23) OR Cross(pricew,Ref(pricew,-23))) AND V>100000 AND C*V > 10000000 ; 
+shapew=dieukienw*shapeStar + dieukien2w*shapeUpArrow;
+
+TimeFrameRestore();
+dkw=TimeFrameExpand(dieukienw,TF_2);
+dk2w=TimeFrameExpand(dieukien2w,TF_2);
+sw=TimeFrameExpand(shapew,TF_2);
+PlotShapes(IIf(dkw, shapeSquare, shapeNone),colorBlack, 0, Low, Offset=-40);
+PlotShapes(IIf(dkw, shapeSquare, shapeNone),colorBlack, 0, Low, Offset=-50);
+PlotShapes(IIf(dk2w, shapeSquare, shapeNone),colorBlack, 0, Low, Offset=-40);
+PlotShapes(IIf(dk2w, shapeSquare, shapeNone),colorBlack, 0, Low, Offset=-50);
+PlotShapes( sw, IIf( dkw, colorGreen, colorDarkGreen ), 0, Low ,Offset=-45 ); 
+shape=dieukien*shapeStar + dieukien2*shapeUpArrow;
+shape1=buysom*shapeUpTriangle;
+
+
+PlotShapes(IIf(buysom, shapeSquare, shapeNone),colorBlack, 0, Low, Offset=-45);
+PlotShapes(IIf(buysom, shapeSquare, shapeNone),colorBlack, 0, Low, Offset=-55);
+PlotShapes(shape1,colorGreen,0,Low,Offset=-50);
+PlotShapes(IIf(dieukien, shapeSquare, shapeNone),colorBlack, 0, Low, Offset=-40);
+PlotShapes(IIf(dieukien, shapeSquare, shapeNone),colorBlack, 0, Low, Offset=-50);
+PlotShapes(IIf(dieukien2, shapeSquare, shapeNone),colorBlack, 0, Low, Offset=-40);
+PlotShapes(IIf(dieukien2, shapeSquare, shapeNone),colorBlack, 0, Low, Offset=-50);
+PlotShapes( shape, IIf( dieukien, colorGreen, colorDarkGreen ), 0, Low ,Offset=-45 ); 
+
+Buyichi = (dieukien OR dieukien2) AND (C > 10) AND (Ref(V,-1) > 100000) AND (MA(C,20)*Ref(V,-1) > 4000000);     ///////////////////////////////////////////////DUYNGUYEN
+//Filter = (dieukien OR dieukien2) AND (C > PriceMin) AND (V > VolMin) AND (MA(C,20)*MA(V,20) > VolxPriceMin);////////////////////////////////////////////////DUYNGUYEN
+buyw=dkw OR dk2w; //mua theo tuan.
+
+Sell= sellstrongtkcross or Sellpcross OR SellStrongPriceCross OR sellstrongsenkouspancross;
+a=ValueWhen(Cross(TenkanSen,KijunSen),TenkanSen,1);
+
+   
+  
+	 
+	   
+	
+_SECTION_END();
+_SECTION_BEGIN("Price BetterColor ");
+//// Parameters ////
+
+colorTK=ParamColor("TENKAN",colorRed);
+colorKJ=ParamColor("KIJUN",colorBlue);
+//colorKJw=ParamColor("KIJUNW",colorDarkGreen);
+colorck=ParamColor("ChiKou",colorViolet);
+colormay1=ParamColor("May xanh",8);
+colormay2=ParamColor("May do ",9);
+chedovechart=ParamToggle("Bat | TAT chart ", "Show|Hide",0);
+if(chedovechart==0)
+{
+barcolor= IIf(buy1 OR buy2, colorblue, IIf(C>O,colorBrightGreen,IIf(C<O,colorRed,colorRed)));
+Plot (C,"Bars",barcolor,styleCandle|styleNoLabel); 
+Plot (TenkanSen,"Tenkan-sen",colorTK,ParamStyle("Style TK", styleLine | styleNoLabel ) | styleNoRescale ); 
+Plot (KijunSen, "Kijun-sen", colorKJ,ParamStyle("Style KJ", styleLine | styleNoLabel ) | styleNoRescale ); 
+Plot (Cks,"Chinkou Span",colorck, styleThick|styleNoLabel,0,0,-23); 
+Plot (SpA,"SenkouSpanA",ParamColor("spanA",colorAqua),ParamStyle("style Spa",styleDashed|styleNoLabel),0,0,n2); 
+Plot (SpB,"SenkouSpanB",ParamColor("spanB",colorAqua),ParamStyle("style Spb",styleDashed|styleNoLabel),0,0,n2); 
+PlotOHLC (SpA,SpA,SpB,SpB,"Cloud",IIf (SpA > SpB,colormay1,colormay2),styleCloud|styleNoLabel, 10, 10, n2 ); 
+}
+if(chedovechart==1)
+{
+barcolor= IIf(buy1 OR buy2, colorblue, IIf(C>O,colorBrightGreen,IIf(C<O,colorRed,colorRed)));
+Plot (C,"Bars",barcolor,styleCandle|styleNoLabel); 
+_SECTION_BEGIN("MA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 10, 2, 200, 1 );
+Plot( MA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorGreen ), ParamStyle("Style", styleLine | styleNoLabel ) | styleNoRescale ); 
+_SECTION_END();
+
+_SECTION_BEGIN("Mid MA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 50, 2, 300, 1 );
+Plot( MA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorRed ), ParamStyle("Style", styleLine | styleNoLabel ) | styleNoRescale ); 
+_SECTION_END();
+
+_SECTION_BEGIN("Long MA");
+P = ParamField("Price field",-1);
+Periods = Param("Periods", 100, 2, 400, 1 );
+Plot( MA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorBlue ), ParamStyle("Style", styleLine | styleNoLabel ) | styleNoRescale ); 
+_SECTION_END();
+
+PlotOHLC (SpA,SpA,SpB,SpB,"Cloud",IIf (SpA > SpB,colormay1,colormay2),styleCloud, 10, 10, n2 ); 
+}
+
+
+
+_SECTION_END();
+
+
+_SECTION_BEGIN("voltoday");
+Bar_today = BarsSince( Day() != Ref( Day(), -1 ) ) + 1;
+TodayVolume = Sum( V, Bar_today );
+
+TimeFrameSet( inDaily ); // switch to Daily minute frame
+/* MA now operates on Daily data, ma5 holds time-compressed 5 bar MA of Daily bars */
+ma20 = MA( V, 20 );
+TimeFrameRestore(); // restore time frame to original
+
+twentyDayAve = TimeFrameExpand( ma20, inDaily );
+
+
+/////////////////////
+//So sanh
+////////////////////
+bi = BarIndex();
+is_last_bar = bi == LastValue(bi);
+tn=Now(4);
+//session = 090000 <= tn AND tn <=113000 AND 130000 <= tn AND tn  <= 144500;
+thoigian= IIf( (090000 <= tn AND tn <=113000), tn-090000, IIf((130000 <= tn AND tn  <= 144500),tn - 130000+ 023000, 41500));
+thoigiantheophut =  60*floor(thoigian/10000) + floor(thoigian/100 - floor(thoigian/10000)*100);
+volduphong=  (V*255) /  thoigiantheophut;
+_SECTION_END();
+
+
+
+// KHOI LUONG CAN KIET
+
+KLTB6P = (V+Ref(V,-1)+Ref(V,-2)+Ref(V,-3)+Ref(V,-4)+Ref(V,-5))/6;
+GIASIDEWAY = HHV(C,10) < 1.07*LLV(C,10)  AND HHV(C,5) <1.03* LLV(C,5);
+
+KLCK1 = IIf(MA(V,20) > 1.5*KLTB6P,1,Null) ;
+KLCK = KLCK1 AND C>MA(C,20) ;//AND GIASIDEWAY;
+
+PlotShapes(IIf( KLCK , shapeUpArrow + shapeCircle, shapeNone ), colorYellow, 0, L, Offset = 20 );
+_SECTION_BEGIN("Pocket Pivot");
+myMaxVolume = volduphong;
+greenDay = close>Open;
+
+
+myVolume1=IIf(Ref(C,-1)>Ref(O,-1),0,Ref(Volume,-1));
+myVolume2=IIf(Ref(C,-2)>Ref(O,-2),0,Ref(Volume,-2));
+myVolume3=IIf(Ref(C,-3)>Ref(O,-3),0,Ref(Volume,-3));
+myVolume4=IIf(Ref(C,-4)>Ref(O,-4),0,Ref(Volume,-4));
+myVolume5=IIf(Ref(C,-5)>Ref(O,-5),0,Ref(Volume,-5));
+myVolume6=IIf(Ref(C,-6)>Ref(O,-6),0,Ref(Volume,-6));
+myVolume7=IIf(Ref(C,-7)>Ref(O,-7),0,Ref(Volume,-7));
+myVolume8=IIf(Ref(C,-8)>Ref(O,-8),0,Ref(Volume,-8));
+myVolume9=IIf(Ref(C,-9)>Ref(O,-9),0,Ref(Volume,-9));
+// if any down days have volumes greater then the current volume, then it's not a pocket pivot
+pocketPivot = myVolume1 < myMaxVolume and myVolume2 < myMaxVolume and myVolume3 < myMaxVolume and
+ myVolume4 < myMaxVolume and myVolume5 < myMaxVolume and myVolume6 < myMaxVolume and myVolume7 < myMaxVolume and
+ myVolume8 < myMaxVolume and myVolume9 < myMaxVolume; //and myVolume10 < myMaxVolume;
+dkcatlen=Cross(C,MA(C,10)) OR Cross(C,MA(C,50)) ;
+dk2= Cross(C,MA(C,10)) AND Cross(C,MA(C,50)) ;
+dkvolume=Volume > MA(V,50);
+
+Buypp =(pocketPivot and greenDay) AND dkvolume AND (dkcatlen OR dk2) ;  //only show pocket pivots on up days
+PlotShapes(IIf(Buypp, shapeSquare, shapeNone),colorGreen, 0, L, Offset=-40);
+PlotShapes(IIf(Buypp, shapeSquare, shapeNone),colorGreen, 0,L, Offset=-50);
+PlotShapes(IIf(Buypp, shapeUpArrow, shapeNone),colorWhite, 0,L, Offset=-45);
+
+
+
+
+       
+//===================Version V.5.1 ======================
+
+//=========================================================================|
+//                    1. VPA Basic Module                                     |
+//=========================================================================|
+_SECTION_BEGIN("1. VPA Basic Module");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+gxs=Param("GRAPH spaceing",10,5,50,5);        
+GraphXSpace = gxs; 
+ //SetChartBkColor(ParamColor("Outer panel",colorBlack)); // color of outer border 
+ //SetChartBkGradientFill( ParamColor("Inner panel upper",colorBlack),ParamColor("Inner panel lower",colorBlack));
+    
+    
+//===================== Basic Definitions =======================================
+volAvg				=	MA(V,30);
+volMean 			= 	StDev(volAvg,30); 
+volUpBand3 		= 	volAvg + 3*volMean; 
+volUpband2 		= 	volAvg + 2*volMean;; 
+volUpBand1 		= 	volAvg + 1*volMean;; 
+volDnBand1 		= 	volAvg -1*volMean; 
+volDnBand2 		= 	volAvg -2*volMean; 
+midprice		=	(H+L)/2;
+spread			=	(H-L);
+avgSpread		=	EMA(spread,40);
+AvgSpreadBar    =  spread > Avgspread;//REVIEW
+wideRangeBar	=	spread>(1.5*avgSpread);
+narrowRangeBar	=	spread<(0.7*avgSpread);
+lowVolume		=	V<Ref(V,-1) AND V<Ref(V,-2) AND V < VolAvg;// Third condition added
+upBar		    =	C>Ref(C,-1); 
+downBar			=	C<Ref(C,-1); 
+highVolume		=	V>Ref(V,-1) AND Ref(V,-1)>Ref(V,-2);//REVIEW
+closeFactor		=	C-L;
+clsPosition		=	spread/(closeFactor+ 1e-9 );
+closePosition		=	IIf(closeFactor==0,avgSpread,clsPosition);//????
+Vb				    =	V>volAvg OR V>Ref(V,-1);
+upClose		    	=	C>=((spread*0.7)+L);// close is above 70% of the Bar
+downClose			=	C<=((spread*0.3)+L);// close is below the 30% of the bar
+aboveClose			=	C>((spread*0.5)+L) ;// close is between 50% and 70% of the bar
+belowClose			=	C<((spread*0.5)+L);// close is between 50% and 30% of the bar
+midClose			=	C>((spread*0.3)+L) AND C<((spread*0.7)+L);// close is between 30% and 70% of the bar
+veryLowClose		=	closePosition>4;//close is below 25% of the bar
+veryHighClose		=	closePosition<1.35;// Close is above 80% of the bar
+ClosePos			= 	IIf(C<=((spread*0.2)+L),1,IIf(C<=((spread*0.4)+L),2,IIf(C<=((spread*0.6)+L),3,IIf(C<=((spread*0.8)+L),4,5))));
+                    // 1 = downclose, 2 = belowclose, 3 = MidClose, 4 = aboveClose, 5 = Upclose
+Volpos				=  	IIf(V>volAvg*2,1,IIf(V>volAvg*1.3,2,IIf(V>= volAvg,3,IIf(V<volAvg AND V>volAvg*0.7,4,5))));
+                    //// 1 = Very High, 2 = High, 3 = Above Average, 4 = Less than Average, 5 = Low
+freshGndHi       =  IIf(H == HHV(H,5),1,0);
+freshGndLo       =  IIf(L == LLV(L,5),1,0);
+//=================New code - FOM =========================
+//---------------No Movement Bar--------------------
+pm       = abs(Close-Open); // price move
+pma      = EMA(pm,40); // avg price move
+Lpm	     = pm<(0.5*pma); // small price move
+bw       =  IIf(C >O, H-C,H-O); // wick
+bwh      =  bw >= 2*pm; // big wick
+fom1     =  (Volume > 1.5 * volAvg)  AND Lpm; // high volume not able to move the price
+
+//---------------Two Bar Revrsal  Dowm side--------------------
+tbcd    =  Ref(C,-1) <  Ref(C,-5) AND Ref(C,-1) <  Ref(C,-4) AND Ref(C,-1) <  Ref(C,-3) AND Ref(C,-1) <  Ref(C,-2); //yesterday bar lower than last 4 bars
+tbc1    =  L < Ref(L,-1)  AND H > Ref(H,-1);// today bar shadoes yesterday bar
+tbc1a   = L < Ref(L,-1)  AND C > Ref(C,-1);
+tbc2     = tbcd ==1 AND tbc1 ==1  AND V>  1.2 * volAvg AND upClose;
+tbc2a   = tbcd ==1 AND tbc1a ==1  AND V>  1.2 * volAvg AND upClose AND NOT tbc1;
+tbc3     = tbcd ==1 AND tbc1 ==1  AND upClose AND V<= 1.2 *VolAvg;
+//---------------- Two bar reversal Up sie --------------------
+tbcu   =  Ref(C,-1) >  Ref(C,-5) AND Ref(C,-1) >  Ref(C,-4) AND Ref(C,-1) >  Ref(C,-3) AND Ref(C,-1) >   Ref(C,-2);
+tbc4   =  tbcu ==1 AND tbc1 ==1  AND V>  1.2 * volAvg AND downClose;
+tbc5   =  tbcu ==1 AND tbc1 ==1  AND downClose AND V<= 1.2 * VolAvg;
+//========================Trend Estimation =========================
+j=MA(C,5);
+trendLongTerm     =  LinRegSlope(j,40) ;
+trendMediumTerm   =  LinRegSlope(j,10) ;
+trendShortTerm    =  LinRegSlope(j,3);
+tls=LinRegSlope(j,3);
+_SECTION_END();
+
+//=========================================================================|
+//                    2. Trend Analysis Module - Random Walk Method           |
+//=========================================================================|
+
+_SECTION_BEGIN("2. Phan tich Trend xu huong");
+SetChartOptions(0,chartShowArrows|chartShowDates);
+ minperiodsRWIst = Param ( "Chu ky ngan Min", 2, 1, 7, 1); 
+ maxperiodsRWIst = Param ( "Chu ky ngan Max", 7, 5, 7, 1); 
+
+ minperiodsRWIlt = Param ( "Chu ky dai Min", 8, 8, 32, 1); 
+ maxperiodsRWIlt = Param ( "Chu ky dai Max", 40, 32, 64, 1);  
+
+ Ground = RWIHi (minperiodsRWIst, maxperiodsRWIst); 
+ Sky    = RWILo (minperiodsRWIst, maxperiodsRWIst);  
+ j      = RWI(minperiodsRWIlt, maxperiodsRWIlt);
+ k      =  RWI(minperiodsRWIst, maxperiodsRWIst);
+ j2     = RWIHi (minperiodsRWIlt, maxperiodsRWIlt); 
+ k2     = RWILo (minperiodsRWIlt, maxperiodsRWIlt); 
+ ja     = Cross(j,1); // The followign section check the diffeent condition of the RWi above and below zero
+ jb     = Cross(1,j); // In oder to check which trend is doing what
+ jc     = Cross(-1,j);
+ jd     = Cross(j,-1);
+ j2a    = Cross(j2,1);
+ j2b    = Cross(1,j2);
+ k2a    = Cross(k2,1);
+ k2b    = Cross(1,k2);
+//Define the Major, Minor and Immediate trend Sttatus
+upmajoron   = j > 1 AND Ref(ja,-1);
+upmajoroff  = j < 1 AND Ref(jb,-1);
+dnmajoron   = j < -1 AND Ref(jc,-1);
+dnmajoroff  = j > -1 AND Ref(jd,-1);
+upminoron   = j2 > 1 AND Ref(j2a,-1);
+upminoroff  = j2 < 1 AND Ref(j2b,-1);
+dnminoron   = k2 > 1 AND Ref(k2a,-1);
+dnminoroff  = k2 < 1 AND Ref(k2b,-1);
+upimd       = IIf(ground > 1, 1,0);
+dnimd       = IIf(sky > 1, 1, 0);
+upmajor     = IIf(j>1,1,IIf(j<(-1),-1,0));
+upminor     = IIf(j2>1,1,-1);
+dnminor     = IIf(k2>1,1,-1);
+
+WriteVal(upmajor);
+_SECTION_END();
+
+//======================================================================|
+//                      VSA Signal generation                           |
+//======================================================================| 
+
+_SECTION_BEGIN("Signal Generation");
+upThrustBar		=	wideRangeBar AND downClose  AND upimd==1 AND H>Ref(H,-1);//WRB and UHS and 
+nut             =   wideRangeBar AND downClose  AND freshGndHi AND HighVolume;// NEW SIGNAL Upthrsut after a short up move
+bc              =   wideRangeBar AND aboveclose AND V == HHV(V,60) AND upmajor==1;// NEW SIGNAL Nuying Climax
+upThrustBarA	=	wideRangeBar AND (ClosePos==1 OR ClosePos==2) AND upminor>0 AND H>Ref(H,-1)AND (upimd>0 OR upmajor>0)AND VolPos <4;// after minor up trend
+upThrustBartrue	=	wideRangeBar AND ClosePos==1 AND upmajor>0 AND H>Ref(H,-1)AND VolPos <4;//occurs after a major uptrend
+upThrustCond1	=	Ref(upThrustBar,-1) AND downBar AND NOT narrowRangeBar ;
+upThrustCond2	=	Ref(upThrustBar,-1) AND downBar AND VolPos == 2;
+upThrustCond3	=	upThrustBar AND VolPos ==1;
+topRevBar		=	Ref(V,-1)>volAvg  AND Ref(upBar,-1) AND Ref(wideRangeBar,-1) AND downBar AND downClose AND wideRangeBar AND upmajor>0 AND H==HHV(H,10);
+PseudoUpThrust	=	Ref(upBar,-1) AND H>Ref(H,-1) AND Ref(V,-1)>1.5*volAvg AND downBar AND downClose AND  NOT upThrustBar;
+pseudoUtCond	=	Ref(PseudoUpThrust,-1) AND downBar AND downClose AND NOT upThrustBar;
+trendChange		=	Ref(upBar,-1) AND H==HHV(H,5)AND downBar AND (downClose OR midClose) AND V>volAvg AND upmajor>0 AND upimd>0 AND NOT wideRangeBar AND NOT PseudoUpThrust ;
+noDemandBarUt	=	upBar AND narrowRangeBar AND lowVolume AND ClosePos> 3 AND ((upminor ==1 AND upimd ==1) OR (upminor ==1 AND upmajor == 1));//in a up market
+noDemandBarDt	=	upBar AND narrowRangeBar AND lowVolume AND ClosePos> 3 AND (upminor == -1 OR upimd == -1);// in a down or sidewayss market
+noSupplyBar		=	downBar AND narrowRangeBar AND lowVolume  AND ClosePos<3 AND ((upminor<1 AND upimd<1) OR (upminor>0 AND upimd<1));
+lowVolTest		=   L==LLV(L,5) AND upClose AND lowVolume;//lowVolume AND L<Ref(L,-1) AND upClose;
+lowVolTest1		= 	L==LLV(L,5) AND V<volAvg AND L<Ref(L,-1) AND upClose AND upminor>0 AND upmajor>0;// AND wideRangeBar;
+lowVolTest2		= 	Ref(lowVolTest,-1) AND upBar AND upClose;
+sellCond1		=	(upThrustCond1 OR upThrustCond2 OR upThrustCond3) ;
+sellCond2		=	Ref(sellCond1,-1)==0;
+sellCond		=	sellCond1 AND sellCond2;
+strengthDown0	= 	upmajor<0 AND VolPos<4 AND Ref(downBar,-1) AND upBar AND ClosePos>3 AND upminor<0 AND upimd<=0;// strength after a long down trend
+strengthDown	= 	VolPos<4 AND Ref(downBar,-1) AND upBar AND ClosePos>3 AND upimd<=00 AND upminor<0;// Strength after a down trend
+strengthDown1	= 	upmajor<0 AND V>(volAvg*1.5) AND Ref(downBar,-1) AND upBar AND ClosePos>3 AND upminor<0 AND upimd<=0;//Strength after downtrend . High volume
+strengthDown2	=	upimd<=0 AND Ref(V,-1)<volAvg  AND upBar AND veryHighClose AND VolPos<4;
+buyCond1		= 	strengthDown OR strengthDown1;
+buyCond			= 	upBar  AND Ref(buyCond1,-1);
+stopVolume		= 	L==LLV(L,5)  AND (upClose OR midClose) AND V>1.5*volAvg AND upmajor<0;
+revUpThrust		=	upmajor<0 AND upBar AND upClose AND V>Ref(V,-1) AND V>volAvg AND  wideRangeBar AND Ref(downBar,-1) AND Ref(downClose,-1) AND upminor<0;
+effortUp			=	H>Ref(H,-1) AND L>Ref(L,-1) AND C>Ref(C,-1) AND C>=((H-L)*0.7+L) AND spread>avgSpread AND VolPos<4;//AND O<=((H-L)*0.3+L) 
+effortUpfail		=	Ref(effortUp,-1) AND (upThrustBar OR upThrustCond1 OR upThrustCond2 OR upThrustCond3 OR (downbar AND AvgSpreadBar));
+effortDown		=	H<Ref(H,-1) AND L<Ref(L,-1) AND C<Ref(C,-1) AND  C<=((H-L)*0.25+L) AND wideRangeBar AND VolPos<4;//O>=((H-L)*0.75+
+effortDownFail      =    Ref(effortDown,-1) AND ((upbar AND AvgSpreadBar) OR revUpThrust OR Buycond1);
+upflag          =    (Sellcond OR Buycond OR effortup OR effortupfail OR stopvolume OR effortdown OR effortdownfail OR revupthrust OR
+                                    noDemandBarDt OR noDemandBarUt OR nosupplyBar OR lowVolTest	OR lowVolTest1 OR lowVolTest2 OR bc);
+bullBar		   	=	(V>volAvg OR V>Ref(V,-1)) AND closePosition <2 AND upBar AND NOT upflag;
+bearBar			=	vb  AND downClose AND downBar AND spread>avgSpread AND NOT upflag ;
+sc                          =      wideRangeBar AND belowClose AND V == HHV(V,60) AND upmajor== -1;// NEW SIGNAL Nuying Climax
+
+
+
+_SECTION_END();
+
+
+
+
+_SECTION_BEGIN("5. Muc HO TRO - KHANG CU gan nhat");
+
+ 
+ WarnaResistant = ParamColor("Warna Garis Resistant",colorRed);
+WarnaSupport = ParamColor("Warna Garis Support",colorBlue);
+R1_show = 0;
+S1_show = 0;
+ 
+SRStyle = ParamStyle("S/R Style",styleThick|styleNoLabel);
+ 
+if (ParamToggle("* Hien thi muc HO TRO - KHANG CU gan nhat", "OFF|ON" ,0 ))
+{
+	// RESISTANT
+	LastHighestValue = LastVisibleValue(Ref(H,-1));
+	if (LastVisibleValue(H) == H[LastValue(BarIndex())])
+		LastHighestValue = LastVisibleValue(H);
+ 
+	i = 1;
+	
+	if (LastHighestValue < HighestVisibleValue(H))
+	{
+			while (LastVisibleValue(ValueWhen(H <= Ref(H,-1) AND Ref(H,-2) <= Ref(H, -1),Ref(H, -1), i)) < LastHighestValue)
+				i++;
+ 
+	    	R1 = LastVisibleValue(ValueWhen(H <= Ref(H,-1) AND Ref(H,-2) <= Ref(H, -1),Ref(H, -1), i));
+ 
+			R1x = LastVisibleValue(ValueWhen(H <= Ref(H,-1) AND Ref(H,-2) <= Ref(H, -1),Ref(BarIndex(), -1), i));
+			Plot(IIf(BarIndex() >= R1x,LastValue(R1),Null),"R1",WarnaResistant ,SRStyle);
+			PlotText("R1 : " + R1, BarCount + 1, LastValue(R1), WarnaResistant);
+			R1_show = 1;
+ 
+			i++;
+ 
+			if (HighestVisibleValue( H ) > R1)
+			{
+				while (LastVisibleValue(ValueWhen(H <= Ref(H,-1) AND Ref(H,-2) <= Ref(H, -1), Ref(H,-1), i)) <= R1)
+					i++;
+ 
+				R2 = LastVisibleValue(ValueWhen(H <= Ref(H,-1) AND Ref(H,-2) <= Ref(H, -1), Ref(H,-1), i));
+				R2x = LastVisibleValue(ValueWhen(H <= Ref(H,-1) AND Ref(H,-2) <= Ref(H, -1),Ref(BarIndex(), -1), i));
+	
+				Plot(IIf(BarIndex() >= R2x,LastValue(R2),Null),"R2",WarnaResistant ,SRStyle);
+				PlotText("R2 : " + R2, BarCount + 1, LastValue(R2), WarnaResistant);
+				i++;
+				if (HighestVisibleValue( H )> R2)
+				{ 		
+					while (LastVisibleValue(ValueWhen(H <= Ref(H,-1) AND Ref(H,-2) <= Ref(H, -1), Ref(H,-1), i)) <= R2)
+						i++;
+					R3 = LastVisibleValue(ValueWhen(H <= Ref(H,-1) AND Ref(H,-2) <= Ref(H, -1), Ref(H,-1), i));
+					R3x = LastVisibleValue(ValueWhen(H <= Ref(H,-1) AND Ref(H,-2) <= Ref(H, -1),Ref(BarIndex(), -1), i));	
+ 
+					Plot(IIf(BarIndex() >= R3x,LastValue(R3),Null),"R3",WarnaResistant ,SRStyle);
+					PlotText("R3 : " + R3, BarCount + 1, LastValue(R3), WarnaResistant);
+				}
+			}
+	}
+	else if (LastHighestValue == HighestVisibleValue(H))
+	{
+	   	R1 = LastVisibleValue(ValueWhen(H <= Ref(H,-1) AND Ref(H,-2) <= Ref(H, -1),Ref(H, -1), i));
+		R1x = LastVisibleValue(ValueWhen(H <= Ref(H,-1) AND Ref(H,-2) <= Ref(H, -1),Ref(BarIndex(), -1), i));
+		if (R1 == LastHighestValue)
+		{
+			Plot(IIf(BarIndex() >= R1x,LastValue(R1),Null),"R1",WarnaResistant ,SRStyle);
+			PlotText("R1 : " + R1, BarCount + 1, LastValue(R1), WarnaResistant);
+			R1_show = 1;
+		}
+	}
+ 
+	// SUPPORT
+	LastLowestValue = LastVisibleValue(Ref(L,-1));
+	if (LastVisibleValue(L) == L[LastValue(BarIndex())])
+		LastLowestValue = LastVisibleValue(L);
+ 
+	i = 1;
+ 
+	if (LastLowestValue > LowestVisibleValue(L))
+	{	
+			while (LastVisibleValue(ValueWhen(L >= Ref(L,-1) AND Ref(L,-2) >= Ref(L, -1),Ref(L, -1), i)) > LastLowestValue)
+				i++;
+ 
+			S1 = LastVisibleValue(ValueWhen(L >= Ref(L,-1) AND Ref(L,-2) >= Ref(L, -1),Ref(L, -1), i));
+			S1x = LastVisibleValue(ValueWhen(L >= Ref(L,-1) AND Ref(L,-2) >= Ref(L, -1),Ref(BarIndex(), -1), i));
+			Plot(IIf(BarIndex() >= S1x,LastValue(S1),Null),"S1",WarnaSupport ,SRStyle);
+			PlotText("S1 : " + S1, BarCount + 1, LastValue(S1), WarnaSupport);
+			S1_show = 1;
+			i++;
+ 
+			if (LowestVisibleValue( L ) < S1)
+			{
+				while (LastVisibleValue(ValueWhen(L >= Ref(L,-1) AND Ref(L,-2) >= Ref(L, -1), Ref(L,-1), i)) >= S1)
+					i++;
+ 
+				S2 = LastVisibleValue(ValueWhen(L >= Ref(L,-1) AND Ref(L,-2) >= Ref(L, -1), Ref(L,-1), i));
+				S2x = LastVisibleValue(ValueWhen(L >= Ref(L,-1) AND Ref(L,-2) >= Ref(L, -1), Ref(BarIndex(),-1), i));	
+ 
+				Plot(IIf(BarIndex() >= S2x,LastValue(S2),Null),"S2",WarnaSupport ,SRStyle);
+				PlotText("S2 : " + S2, BarCount + 1, LastValue(S2), WarnaSupport);
+				i++;
+				if (LowestVisibleValue( L )< S2)
+				{ 		
+					while (LastVisibleValue(ValueWhen(L >= Ref(L,-1) AND Ref(L,-2) >= Ref(L, -1), Ref(L,-1), i)) >= S2)
+						i++;
+					S3 = LastVisibleValue(ValueWhen(L >= Ref(L,-1) AND Ref(L,-2) >= Ref(L, -1), Ref(L,-1), i));
+					S3x = LastVisibleValue(ValueWhen(L >= Ref(L,-1) AND Ref(L,-2) >= Ref(L, -1), Ref(BarIndex(),-1), i));
+					Plot(IIf(BarIndex() >= S3x,LastValue(S3),Null),"S3",WarnaSupport ,SRStyle);
+					PlotText("S3 : " + S3, BarCount + 1, LastValue(S3), WarnaSupport);
+				}
+			}
+	}
+	else if (LastLowestValue == LowestVisibleValue(L))
+	{
+	   	S1 = LastVisibleValue(ValueWhen(L >= Ref(L,-1) AND Ref(L,-2) >= Ref(L, -1),Ref(L, -1), i));
+		S1x = LastVisibleValue(ValueWhen(L >= Ref(L,-1) AND Ref(L,-2) >= Ref(L, -1),Ref(BarIndex(), -1), i));
+		if (S1 == LastLowestValue)
+		{
+			Plot(IIf(BarIndex() >= S1x,LastValue(S1),Null),"S1",WarnaSupport ,SRStyle);
+			PlotText("S1 : " + S1, BarCount + 1, LastValue(S1), WarnaSupport);
+			S1_show = 1;
+		}
+	}
+ 
+	if (S1_show AND R1_show)
+	{
+		SR = Prec((1-(S1/R1))*100,2);
+	}
+}
+ 
+// END SCRIPT UNTUK SUPPORT / RESISTANT
+_SECTION_END();
+
+
+
+
+
+
+
+
+
+
+//==========================================================================|
+//                    14. Volume At Price                                 |
+//==========================================================================|
+
+_SECTION_BEGIN("14. Volume At Price");
+PlotVAPOverlay( Param("Lines", 300, 100, 1000, 1 ), Param("Width", 5, 1, 100, 1 ), ParamColor("Color", colorCycle ), ParamToggle("Chon ben Trai|Phai", "Left|Right",5 ) );
+ 
+_SECTION_END();
+//END Volume At Price  
+
+
+
+
+
+
+
+//==========================================================================|
+//                    Chay bo loc VSA                              |
+//==========================================================================|
+
+_SECTION_BEGIN("Exploration");
+Buybd =(Buy1 OR Buy2) AND (C > 10) AND (Ref(V,-1) > 100000) AND (MA(C,20)*Ref(V,-1) > 4000000) ;
+Filter= 
+         Buybd OR Buyichi OR buyw OR buypp AND Volume > 50000 AND C> 3 ;;
+
+
+color=IIf(C>O,colorGreen,colorRed);
+bcolor=IIf(Buy1 OR Buy2,colorGreen,1);
+AddColumn(Buyw,"buyw",1.1,bcolor);
+AddColumn(Buybd,"buybd",1.1,bcolor);
+AddColumn(O,"open",1.1,color);
+AddColumn(C,"close",1.1,color);
+AddColumn(v,"volume",1.1,color);
+AddColumn(dieukien," dieu kien1",1.2,bcolor);
+AddColumn(dieukien2," dieu kien2",1.2,bcolor);
+AddColumn(buypp,"Mua pocket pivot",1.2,bcolor);
+AddtextColumn(FullName(),"name");
+
+_SECTION_END();
+
+
+tcolor = IIf(strengthDown OR strengthDown1 OR buyCond, 42, IIf(buycond , colorPaleGreen, IIf(strengthDown2, colorPaleGreen,  
+        IIf(upThrustBar OR upThrustCond1 OR sellcond, 33, IIf(upThrustCond2 OR upThrustCond3, 25, IIf(effortUp, colorLime, IIf(effortDown,colorRed, IIf(PseudoUpThrust,33,
+        IIf(pseudoUtCond OR noDemandBarUt,colorOrange, IIf(strengthDown0 OR noSupplyBar OR lowVolTest OR lowVolTest1 OR lowVolTest2,42, IIf(stopVolume OR revUpThrust,42, IIf(upThrustCond1,colorOrange,
+        IIf(trendChange,33,colorPaleBlue))))))))))))); 
+
+AddTextColumn(
+WriteIf (upThrustBar, "Dau hieu cua Diem Yeu. ",
+WriteIf (upThrustCond1	, "Su xac nhan cua Diem Yeu. ",
+WriteIf (upThrustCond2	 AND NOT upThrustCond1	, "Su xac nhan cua Diem Yeu.",
+WriteIf (upThrustCond3	, "Su xac nhan cua Diem Yeu",
+WriteIf (strengthDown1, "Suc manh dang tro lai. ",
+WriteIf (strengthDown0 AND NOT strengthDown, "Suc manh dang tro lai. ",
+WriteIf (strengthDown AND NOT strengthDown1, "Suc manh dang tro lai. ",
+WriteIf (lowVolTest , "Test for supply - Kiem dinh nguon cung. ",
+WriteIf (lowVolTest2 , "Su xac nhan cua Diem Manh. ",
+WriteIf (buyCond, "Su thay doi tich cuc ",
+WriteIf (Sellcond, "Su thay doi tieu cuc ",
+WriteIf (PseudoUpThrust, "Dau hieu cua Diem Yeu. ",
+WriteIf (topRevBar, "Top Reversal - Dao chieu o dinh (Nhan chim giam). Dau hieu cua Diem Yeu. ",
+WriteIf (pseudoUtCond, "Su xac nhan cua Diem Yeu. ",
+WriteIf (lowVolTest1, "Dau hieu cua Diem Manh. ",
+WriteIf (strengthDown2, "Boc lo Suc Manh. ",
+WriteIf (noSupplyBar, "Boc lo Suc Manh. ",
+WriteIf (trendChange, "Boc lo Diem Yeu. ",
+WriteIf (noDemandBarUt, "Dau hieu cua Diem Yeu. ",
+WriteIf (noDemandBarDT, "Dau hieu cua Diem Yeu. ",
+WriteIf (stopVolume, "Su ket thuc cua xu huong giam dang rat gan",
+WriteIf (revUpThrust, "Su ket thuc cua xu huong giam dang rat gan ",
+WriteIf (effortUp, "Dau hieu Tang gia ",
+WriteIf (effortDown	, "Dau hieu Giam gia ",
+WriteIf (effortDownfail	, "Dau hieu Tang gia ",
+WriteIf (effortUpfail, "Dau hieu Giam gia ","")))))))))))))))))))))))))), "Dau hieu" , 1, colorDefault, tcolor,110);
+
+AddTextColumn(
+WriteIf (upThrustBar, " Thanh gia Upthrust. ",
+WriteIf (upThrustCond1, " Thanh gia giam sau mot thanh Upthrust. ",
+WriteIf (upThrustCond2 AND NOT upThrustCond1, " Mot thanh gia giam voi khoi luong cao di sau thanh Upthrust.",
+WriteIf (upThrustCond3, "Day la thanh Upthrust voi khoi luong sieu cao.",
+WriteIf (strengthDown1, "Suc manh dang quay lai sau mot xu huong giam (Co Cau dang bat day). ",
+WriteIf (strengthDown0 AND NOT strengthDown, "Suc manh dang quay lai sau mot xu huong giam (Co Cau dang bat day). ",
+WriteIf (strengthDown AND NOT strengthDown1, "Suc manh dang quay lai sau mot xu huong giam (Co Cau dang bat day). ",
+WriteIf (lowVolTest , "Test for supply - Kiem dinh nguon cung. ",
+WriteIf (lowVolTest2, "Thanh gia tang sau khi Test cung thanh cong, Diem Manh duoc xac nhan ",
+WriteIf (buyCond, "Co the ket thuc xu huong GIAM va bat dau xu huong TANG",
+WriteIf (Sellcond, "Co the ket thuc xu huong TANG va bat dau xu huong GIAM",
+WriteIf (PseudoUpThrust, "Psuedo UpThrust - Upthrust gia tao (Co khoi luong thap hon 2 thanh gia truoc do). ",
+WriteIf (topRevBar, "Dao chieu o dinh. Hay than trong. Xac suat ket thuc da tang hien tai rat cao",
+WriteIf (pseudoUtCond, "Mot thanh gia giam voi muc dong cua o phia duoi thap theo sau thanh Pseudo Upthrust - Upthrust gia tao. ",
+WriteIf (lowVolTest1, "Test for supply - Kiem dinh nguon cung trong xu huong tang. ",
+WriteIf (strengthDown2, "Thanh tang gia voi khoi luong cao, co muc gia dong cua o phia tren cao. ",
+WriteIf (trendChange, "Giam gia voi khoi luong cao sau mot xu huong tang. ",
+WriteIf (noDemandBarUt, "No Demand  - Khong co cau trong xu huong tang. Dau hieu cua Diem Yeu. ",
+WriteIf (noDemandBarDt, "No Demand - Khong co cau. Xu huong tang som ket thuc. ",
+WriteIf (stopVolume, "Stopping volume - Khoi luong dung. ",
+WriteIf (noSupplyBar, "No Supply - Khong co nguon cung. Dau hieu cua Diem Manh",
+WriteIf (revUpThrust, "Thanh UpThrust dao nguoc. ",
+WriteIf (effortUp, "No luc day gia TANG. ",
+WriteIf (effortDown	, "No luc day gia GIAM.  ",
+WriteIf (effortUpfail, "No luc day gia GIAM that bai. ",
+WriteIf (effortUpfail, "No luc day gia TANG that bai. ","")))))))))))))))))))))))))), "Tinh trang" , 1, colorDefault, tcolor,250);
+ _SECTION_END ();
+
+
+
+
+
+
+
+//|============================================================================================|
+//|                                      26. Hien thi gia thi truong  
+//|============================================================================================|   
+
+//|Hien thi ten co phieu va gia dong cua|
+
+_SECTION_BEGIN("Hien thi GIA thi truong");
+FS=Param("Font Size",25,11,100,1);
+GfxSelectFont("Times New Roman", 28, 700, italic = True, underline = False, True ); //chon Fonts
+GfxSetBkMode( colorWhite );  // Chon mau nen
+GfxSetTextColor( ParamColor("Color",colorCustom9) );  // Hien thi mau chu
+Hor             =   Param("Horizontal Position",1,1,1000,1);  // Vi tri ngang
+Ver             =   Param("Vertical Position",1,1,1000,1);    // Vi tri doc
+GfxTextOut(""+C,Hor+785 , Ver-10 ); //|Hien thi gia dong cua
+GfxTextOut( Name(), Hor+700,Ver -10 );  //|Hien thi ten co phieu
+YC=TimeFrameGetPrice("C",inDaily,-1);
+DD=Prec(C-YC,2);
+xx=Prec((DD/YC)*100,2);
+GfxSelectFont("Times New Roman", 10, 700, italic =True, underline = False, True );
+GfxSetBkMode( colorWhite );
+GfxSetTextColor(ParamColor("Color",colorCustom9) );
+GfxTextOut(""+Prec(C-TimeFrameGetPrice("C",inDaily,-1),2)+" ("+Prec((Prec(C-TimeFrameGetPrice("C",inDaily,-1),2)/TimeFrameGetPrice("C",inDaily,-1))*100,2)+"%)", Hor+785, Ver+30 ); //|Hien thi thay doi gia dong cua
+_SECTION_END();
+
+//|    END Hien thi gia thi truong  
+
+
+
+
+
+
+//|============================================================================================|
+//|                                       TITLE - TIEU DE                                      |
+//|============================================================================================|
+
+// Dau hieu canh bao VSA
+
+
+if( Status("action") == actionIndicator ) 
+(
+
+Title = EncodeColor(colorSeaGreen)+ " CASANOVA YEU MAU TIM - VPS ID C674 "
+        +("\n")+ 
+        EncodeColor(colorDarkGreen)+ " - " + FullName() + " ("+Name()+") - " + "(" + Interval(2) +")" + EncodeColor(colorOrange) + "  - " + Date() 
+ 
+ 
+
+//====================================================================================|
+//                       Hien thi thong tin Gia va Khoi luong                            |
+//====================================================================================|
+
++("\n")+ EncodeColor(colorLime)+"-------------------------------------------------------------------" +("\n")+ // Xuong dong
+
+EncodeColor(colorBlue) + "   - Volume:       "+ 
+
+WriteIf(V>MA(V,30)*1.5,EncodeColor(colorViolet)+ WriteVal(V,1.0)+ "  =  " + WriteVal(V/MA(V,30)*100,1.0) + "%  (MA30)" ,
+WriteIf(V<MA(V,30)*1.5 AND V>=MA(V,30)*1.1  ,EncodeColor(colorGreen)+ WriteVal(V,1.0)+ "  =  " + WriteVal(V/MA(V,30)*100,1.0) + "%  (MA30)",
+WriteIf(V<MA(V,30)*1.1 AND V>MA(V,30)*0.9  ,EncodeColor(colorDarkGreen)+ WriteVal(V,1.0)+ "  =  " + WriteVal(V/MA(V,30)*100,1.0) + "%  (MA30)",
+WriteIf(V<=MA(V,30)*0.9 AND V>=MA(V,30)*0.5,EncodeColor(colorRed)+ WriteVal(V,1.0)+ "  =  " + WriteVal(V/MA(V,30)*100,1.0) + "%  (MA30)" ,
+WriteIf(V<MA(V,30)*0.5,EncodeColor(colorTurquoise)+ WriteVal(V,1.0)+ "  =  " + WriteVal(V/MA(V,30)*100,1.0) + "%  (MA30)","")))))
+
+
+
++"     "+
+EncodeColor(colorBlue) + "    - Open: " +EncodeColor(colorDarkGreen) +O+ 
+EncodeColor(colorGreen) + "    - High: " +EncodeColor(colorDarkGreen) +H+ 
+EncodeColor(colorDarkRed) + "    - Low: " +EncodeColor(colorDarkGreen) +L+ 
+EncodeColor(colorSeaGreen) + "    - Close: " +
+
+WriteIf(Prec((Prec(C-TimeFrameGetPrice("C",inDaily,-1),2)/TimeFrameGetPrice("C",inDaily,-1))*100,2)>=6,EncodeColor(colorViolet)  +C+ "  =  "+Prec(C-TimeFrameGetPrice("C",inDaily,-1),2)+"  ("+Prec((Prec(C-TimeFrameGetPrice("C",inDaily,-1),2)/TimeFrameGetPrice("C",inDaily,-1))*100,2)+"%)",
+WriteIf(Prec((Prec(C-TimeFrameGetPrice("C",inDaily,-1),2)/TimeFrameGetPrice("C",inDaily,-1))*100,2)<=-6,EncodeColor(colorTurquoise) +C+ "  =  "+Prec(C-TimeFrameGetPrice("C",inDaily,-1),2)+"  ("+Prec((Prec(C-TimeFrameGetPrice("C",inDaily,-1),2)/TimeFrameGetPrice("C",inDaily,-1))*100,2)+"%)",
+WriteIf(Prec((Prec(C-TimeFrameGetPrice("C",inDaily,-1),2)/TimeFrameGetPrice("C",inDaily,-1))*100,2)>0 AND Prec((Prec(C-TimeFrameGetPrice("C",inDaily,-1),2)/TimeFrameGetPrice("C",inDaily,-1))*100,2)<=6,EncodeColor(colorCustom9) +C+ "  =  "+Prec(C-TimeFrameGetPrice("C",inDaily,-1),2)+"  ("+Prec((Prec(C-TimeFrameGetPrice("C",inDaily,-1),2)/TimeFrameGetPrice("C",inDaily,-1))*100,2)+"%)",
+WriteIf(Prec((Prec(C-TimeFrameGetPrice("C",inDaily,-1),2)/TimeFrameGetPrice("C",inDaily,-1))*100,2)<0 AND Prec((Prec(C-TimeFrameGetPrice("C",inDaily,-1),2)/TimeFrameGetPrice("C",inDaily,-1))*100,2)>=-6,EncodeColor(colorRed) +C+ "  =  "+Prec(C-TimeFrameGetPrice("C",inDaily,-1),2)+"  ("+Prec((Prec(C-TimeFrameGetPrice("C",inDaily,-1),2)/TimeFrameGetPrice("C",inDaily,-1))*100,2)+"%)",EncodeColor(colorDarkGreen)  +C+ "  =  "+Prec(C-TimeFrameGetPrice("C",inDaily,-1),2)+"  ("+Prec((Prec(C-TimeFrameGetPrice("C",inDaily,-1),2)/TimeFrameGetPrice("C",inDaily,-1))*100,2)+"%)"))))
+
+
++
+EncodeColor(colorBlue)+("\n   - Khoi luong: ")+
+WriteIf(V>volAvg*2,EncodeColor(colorViolet)+" SIEU CAO",WriteIf(V>volAvg*1.3,EncodeColor(colorGreen)+" CAO",
+WriteIf(V>volAvg,EncodeColor(colorGreen)+" CAO HON TRUNG BINH",
+WriteIf(V<volAvg AND V>volAvg*0.7,EncodeColor(colorRed)+" THAP HON TRUNG BINH",
+WriteIf(V<volAvg*0.7 AND V>volAvg*0.3,EncodeColor(colorRed)+" THAP",WriteIf(V<volAvg*0.3,EncodeColor(colorTurquoise)+" RAT THAP",""))))))+
+
+(EncodeColor(colorBlue)+"      -   Bien dong gia (Spread): ")+
+
+WriteIf(spread >avgSpread*1.5,EncodeColor(colorViolet)+" RONG",
+WriteIf(spread <avgSpread*1.5 AND spread>avgSpread ,EncodeColor(colorGreen)+" TREN TRUNG BINH",
+WriteIf(spread < avgSpread AND spread >= AvgSpread*0.7,EncodeColor(colorDarkGreen)+"HEP HON TRUNG BINH",
+WriteIf(spread < AvgSpread*0.7 AND spread >= AvgSpread*0.3,EncodeColor(colorRed)+" HEP",
+WriteIf(spread < AvgSpread*0.3,EncodeColor(colorTurquoise)+" RAT HEP","")))))+
+
+(EncodeColor(colorBlue)+"      -   Vi tri gia dong cua:  ")+
+WriteIf(ClosePos==5,EncodeColor(colorViolet)+" Dong cua o muc CAO NHAT cay nen",
+WriteIf(ClosePos==4,EncodeColor(colorGreen)+" Dong cua o PHAN TREN cay nen",
+WriteIf(ClosePos==3,EncodeColor(colorDarkGreen)+" Dong cua o NGAY GIUA cay nen",
+WriteIf(ClosePos==2,EncodeColor(colorRed)+" Dong cua o PHAN DUOI cay nen",
+EncodeColor(colorTurquoise)+" Dong cua o muc THAP NHAT cay nen"))))+ 
+
+
+
+EncodeColor(colorLime)+("\n   - Xu huong ngan han:  ")+WriteIf(upminor==1,EncodeColor(colorGreen)+" TANG - UP",WriteIf(dnminor==1,EncodeColor(colorRed)+" GIAM - DOWN",EncodeColor(colorDarkGreen)+" SIDEWAY - KHONG CO XU HUONG"))+
+WriteIf(upminoroff,EncodeColor(colorRed)+"    Xu huong TANG ket thuc",WriteIf(dnminoroff,EncodeColor(colorGreen)+"  Xu huong GIAM ket thuc","" ))+
+
+
+EncodeColor(colorLime)+("\n   - Xu huong trung han:  ")+
+WriteIf(upimd==1,EncodeColor(colorGreen)+" TANG - UP",
+WriteIf(dnimd==1,EncodeColor(colorRed)+" GIAM - DOWN",EncodeColor(colorDarkGreen)+" SIDEWAY - KHONG CO XU HUONG"))+EncodeColor(colorLime)+
+
+("\n   - Xu huong dai han:     ")+
+WriteIf(upmajor==1,EncodeColor(colorGreen)+" TANG - UP",WriteIf(upmajor== -1,EncodeColor(colorRed)+" GIAM - DOWN",EncodeColor(colorDarkGreen)+" SIDEWAY - KHONG CO XU HUONG"))+
+WriteIf(upmajoroff,EncodeColor(colorRed)+"    Xu huong TANG ket thuc",WriteIf(dnmajoroff,EncodeColor(colorGreen)+"  Xu huong GIAM ket thuc","\n" ))+"\n" +
+
+
+
+
+//====================================================================================|
+//                       Hien thi tin hieu mua Ichimoku Kinko Hyo                             |
+//====================================================================================|
+
+
+
+		
+
+ //|============================================================================================|
+//|                                       Hien thi Tin hieu canh bao  VSA                                   |
+//|============================================================================================|
+
+  /*
+strength	= sc OR tbc2a OR tbc2 or effortDownfail OR 	strengthDown OR strengthDown1 OR strengthDown2 OR 
+              strengthDown0 OR bullBar OR effortUp OR upBar  OR revUpThrust ;
+
+weakness	= bc or upThrustBartrue OR upThrustCond1 OR upThrustCond2 OR upThrustCond3 OR PseudoUpThrust OR pseudoUtCond   
+             OR tbc4 or effortUpfail or Sellcond OR  upThrustBar OR  effortDown  OR bearBar OR downBar ;
+
+vsachange = trendChange OR lowVolTest or lowVolTest1 or lowVolTest2 or buyCond  OR noSupplyBar or stopVolume or noDemandBarDt OR noDemandBarUt 
+           or topRevBar OR Fom1 OR tbc3 OR tbc5  ;
+
+*/ 
+
+
+//1. Tin hieu canh bao xuat hien Diem Yeu
+
+
+
+EncodeColor(colorRed)+
+
+WriteIf (bc,"\n +Buying Climax - Cao trao Mua tiem nang. ","")+
+WriteIf (upThrustBartrue, "\n +Day la mot thanh Upthrust thuc su. Dau hieu Diem Yeu kha chac chan. ","")+
+WriteIf (upThrustBar OR upThrustCond1 OR upThrustCond2 OR upThrustCond3, "\n  +Day la mot thanh Upthrust. Mot dau hieu cua Diem Yeu. ","")+
+WriteIf (PseudoUpThrust, "\n +Psuedo UpThrust - Upthrust gia tao (co khoi luong thap hon 2 thanh truoc no). Dau hieu cua Diem Yeu. ","")+
+WriteIf (pseudoUtCond AND NOT PseudoUpThrust, "\n +Mot thanh gia giam co gia dong cua o muc thap, di sau mot thanh Pseudo Upthrust. Xac nhan cua Diem Yeu. ","")+
+WriteIf (effortUpfail, "\n +No luc tang gia that bai (Effort to Move up has failed). Tin hieu giam gia. ","")+
+WriteIf (Sellcond, "\n +Xu huong TANG co kha nang se KET THUC va som bat dau mot xu huong GIAM. ","")+
+WriteIf (effortDown, "\n  +No luc day gia GIAM (Effort to Fall). Dau hieu cua Diem Yeu.  ","")+
+WriteIf (tbc4, "\n +Hai thanh gia dao chieu giam gia (Nhan chim giam) voi khoi luong cao hon. Dau hieu cua Diem Yeu", "")+
+
+//2. Tin hieu canh bao xuat hien Diem Manh
+
+
+EncodeColor(colorCustom9)+
+
+WriteIf (sc, "\n +Sell Climax - Cao trao BAN. Dau hieu cua Diem Manh."
+            +"\n Neu co Khoi luong cao se ho tro cho Diem Manh nay. ","")+
+WriteIf (tbc2a , "\n +Hai thanh gia giong voi 2 thanh dao chieu tang voi Khoi luong cao hon. Dau hieu cua Diem Manh. ", "")+
+WriteIf (tbc2 AND NOT tbc2a, "\n +Hai thanh gia dao chieu tang (Nhan chim tang) voi Khoi luong cao hon. Dau hieu cua Diem Manh. ", "")+
+WriteIf (effortDownfail, "\n +No luc day gia xuong that bai (Effort to Move Down has failed). Dau hieu cua Diem Manh.  ","")+
+WriteIf (strengthDown OR strengthDown0 OR strengthDown1 OR strengthDown2 , "\n +Diem Manh xuat hien tro lai sau mot xu huong giam. Neu co Khoi luong cao se ho tro cho Diem Manh nay. ","")+
+WriteIf (effortUp, "\n +Mot no luc day gia tang (Effort to Rise) . Dau hieu cua Diem Manh.  ","")+
+WriteIf (revUpThrust, "\n +Thanh gia Upthrust dao nguoc. Dau hieu cua Diem Manh. ","")+
+
+
+//3. Tin hieu canh bao dau hieu dao chieu xu huong truoc do 
+
+
+EncodeColor(colorDarkGreen)+
+
+WriteIf (trendChange, "\n +Mot thanh gia GIAM voi Khoi luong cao sau mot dot tang gia. Dau hieu cua Diem Yeu. ","")+
+WriteIf (topRevBar, "\n +Top Reversal - Dao chieu giam o dinh. Dau hieu cua Diem Yeu. ","")+
+WriteIf (noDemandBarDt OR  noDemandBarUt, "\n +No Demand - Khong co Cau. Xu huong tang co the thay doi.  ","")+
+WriteIf (Fom1, "\n +Khoi luong CAO nhung gia lai khong di chuyen nhieu. Co the dang gap Vung Khang cu/Ho tro manh - vung Cung/Cau manh me. ","")+
+WriteIf (tbc3 AND NOT Fom1 , "\n +Hai thanh gia dao chieu nhau (Nhan chim) voi Khoi luong thap. ", "")+
+WriteIf (tbc5 AND NOT tbc3, "\n +Hai thanh gia giong voi 2 thanh dao chieu nhau (Nhan chim) voi Khoi luong thap. ", "")+
+WriteIf (buyCond, "\n +Xu huong GIAM co kha nang se KET THUC va som BAT DAU mot xu huong TANG.  ","")+
+WriteIf (lowVolTest or lowVolTest1 OR lowVolTest2, "\n +Test for supply - Kiem dinh nguon cung thanh cong. Dau hieu cua Diem Manh. ","")+
+WriteIf (noSupplyBar, "\n +No Supply - Khong co nguon cung. Dau hieu cua Diem Manh. ","")+
+WriteIf (stopVolume, "\n +Stopping volume - Khoi luong dung giam. Bao hieu xu huong giam sap ket thuc. ","")
+
+	/* WriteIf(Cond7,EncodeColor(colorGreen) + "- Gia vuot Kumo tai " +C+ "\n" , " ") + 
+	WriteIf(Cond3, EncodeColor(colorGreen) + "- Tenkan cat len Kijun tai " + a +"\n", "") + 
+	WriteIf(Cross(C,KijunSen), "\n"  + EncodeColor(colorGreen) + " - Gia cat len Kijun tai " +C+"\n"," ") + 
+	WriteIf(Cond5,EncodeColor(colorGreen) + "- Chikou span cat len tai " +C+"\n","\n ") + 
+	WriteIf(Cond8,EncodeColor(colorRed) + "- Gia dong cua duoi may Kumo " +C+" \n"," ") + 
+	WriteIf(Cond4,EncodeColor(colorRed) + "- Tenkan cat xuong Kijun tai " + a +" \n", "") + 
+	WriteIf(Cross(KijunSen,c),EncodeColor(colorRed) + "- Gia cat xuong Kijun tai " +C+" \n", " ") + 
+	WriteIf(Cond6,EncodeColor(colorRed) + "- Chikou span cat xuong tai  " +C+ " \n","\n ") + 
+	WriteIf(bullish,EncodeColor(colorGreen)+"- Future Kumo:Bullish " + " \n",EncodeColor(colorRed) + " -Future Kumo:Bearish "+"\n" ) + 
+	WriteIf(chikoufree,EncodeColor(colorGreen)+"- Chikou Span : Free"+" \n",EncodeColor(colorRed) + " -Chikou Span :NOT Free"+"\n")+ 
+	WriteIf(Cond1,EncodeColor(colorGreen)+"- Gia : tren may"+" \n", "")+
+	WriteIf(Cond2,EncodeColor(colorRed)+"- Gia : duoi may"+" \n", "")+ 
+	WriteIf(withinc,EncodeColor(colorDarkGreen)+"- Gia : trong may"+" \n", "")+
+	WriteIf(TenkanSen > KijunSen,EncodeColor(colorGreen)+"- TenkanSen > KijunSen: Bullish"+"\n", EncodeColor(colorRed) +" -TenkanSen < KijunSen: Bearish"+"\n")+
+	WriteIf(ADX(14) >= 5,EncodeColor(colorGreen)+"- PDI:" + PDI(14)+" MDI:"+MDI(14)+"\n","")+
+	WriteIf(RSI(14) > 50,EncodeColor(colorGreen)+"- RSI:" + RSI(14)+"\n","")+
+	WriteIf(Cross(RSI(14), 30),EncodeColor(colorGreen)+"- RSI cat len 30: " + RSI(14)+"\n","")+
+	WriteIf(cond3 AND a<Min(SenkouSpanA,SenkouSpanB),EncodeColor(colorGreen)+"diem giao cat duoi may cach may: " + 100*(Min(SenkouSpanA,SenkouSpanB)-a)/(Min(SenkouSpanA,SenkouSpanB))+"% \n","")+
+	WriteIf(cond3 AND a>Max(SenkouSpanA,SenkouSpanB),EncodeColor(colorGreen)+"diem giao cat tren may cach may: " + 100*(a-Max(SenkouSpanA,SenkouSpanB))/(Max(SenkouSpanA,SenkouSpanB))+"% \n","")+
+	WriteIf(ma5 > 0,EncodeColor(colorGreen)+"- ma5 chenh lech tk kj: " + (var1) +"\n","")+
+	WriteIf(ma5 > 0,EncodeColor(colorGreen)+"- may mong khoang cach spanA-B " + (Max(SenkouSpanA,SenkouSpanB)-Min(SenkouSpanA,SenkouSpanB))* 100 /(Min(SenkouSpanA,SenkouSpanB))  +"% \n","")+
+	WriteIf(maytuanxanh,EncodeColor(colorGreen)+"- May tuan : bullish "  +"\n","")+
+	WriteIf(maytuando,EncodeColor(colorGreen)+"- May tuan : bearish "  +"\n","")
+
+*/
+);
+	
+
+//====================================================================================|
+//                       Hien thi Phan dien giai VSA                                       |
+//====================================================================================|
+
+
+ 
+
+	
+   
+
+	
+
+
+
+                 
+
+
+
+ 
+_SECTION_END();
+
+// END Title
+
+
+
+
+

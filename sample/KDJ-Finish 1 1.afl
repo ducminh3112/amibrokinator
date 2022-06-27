@@ -1,0 +1,152 @@
+
+
+GraphXSpace=Param("GraphXSpace",15,-50,50,1);
+
+//code dong tinen
+_SECTION_BEGIN("Ap luc mua ban");
+//SetChartOptions(0,chartShowArrows|chartShowDates);
+ss=ParamToggle("Chon gia tri cao thap","dung|binhthuong",0);
+
+if(ss)
+	{
+	Hi 	 = H;
+   Li 	 = L;
+		}
+else
+	{
+	Hi  = Max(High, Ref(C,-1));
+   Li  = Min(Low, Ref(C,-1));
+	}
+
+sp 		= Hi-C;
+bp 		= C-Li;
+bpavg = EMA(bp,26); //trung binh 26 phien
+spavg = EMA(sp,26); //trung binh 26 phien
+nbp = bp/bpavg;
+nsp = sp/spavg;
+//diff = nbp-nsp;
+//diffcolor = IIf(diff>0,colorGreen,colorOrange);
+Varg = EMA(V,20);
+nv = V ; ///Varg;
+nbfraw = nbp * nv;
+nsfraw = nsp * nv;
+nbf = EMA(nbp * nv,20);
+nsf = EMA(nsp * nv,20);
+
+
+//in dong tien mua ban
+
+//Plot(nbf,"Ap luc mua",colorBlueGrey,1|styleThick);
+//PlotText("buy =" + LastValue(nbf), BarCount, LastValue(nbf),colorwhite|styleOwnScale);
+//Plot(nsf,"Ap luc ban",colorYellow,1|styleThick);
+//PlotText("sell =" + LastValue(nsf), BarCount, LastValue(nsf),colorwhite|styleOwnScale);
+diff = nbf-nsf;
+//diffcolor = IIf(diff>0,colorGreen,colorRed);
+//SetBarFillColor( diffcolor ); 
+//PlotOHLC(0,diff,0,diff,"Force",IIf(diff>0,colorLime,colorOrange), styleCloud | styleOwnScale ) ;
+_SECTION_END();
+
+
+// code lotus
+
+_SECTION_BEGIN( "code buy and sell" );
+Smoother = Param( "Trend Smoother", 3, 5, 20 );
+upcolor = ParamColor( "UpTrend Color", colorGreen );
+Downcolor = ParamColor( "DownTrend Color", colorRed );
+_SECTION_END();
+
+_SECTION_BEGIN( "Circle Detail" );
+Warningcolor = ParamColor( "Warning/Watch Signal", colorBlue );
+WatchColor = ParamColor( "Accumulation Zone", colorWhite );
+EntryColor = ParamColor( "Entry Signal", colorAqua );
+ProfitTakeColor = ParamColor( "Distribution Zone", colorYellow );
+ExitColor = ParamColor( "Exit Signal", colorRed );
+_SECTION_END();
+ 
+
+
+_SECTION_BEGIN("BD VOZ");
+n = Smoother;
+VAR2=(High+Low+(Close)*(2))/(4);
+
+B11 = ((EMA((VAR2-LLV(VAR2,15))/(HHV(Low,15)-LLV(VAR2,15)),2))*(38));
+b = EMA( b11, n );
+
+Plot(b, "", colorViolet,stylethick); //Plot(b, "", 4, 1+4);
+
+bot11 = ((((-1))*(EMA((VAR2-LLV(VAR2,15))/(HHV(Low,15)-LLV(VAR2,15)),2))+0.01)*(38));
+bot1 = EMA( bot11, n );
+Plot(bot1, "", colorViolet,styleThick); //Plot(bot1, "", 4, 1+4);
+
+//duong line ho tro gia
+
+VAR22=((Close-LLV(Low,10))/(HHV(High,10)-LLV(Low,10)))*(100);
+
+VAR33=EMA(VAR22,10);
+
+VAR44=EMA(VAR33,10);
+
+VAR55=(3)*(VAR33)-(2)*(VAR44);
+
+VAR66=EMA(VAR55,n);
+UP = EMA( var66, n );
+DOWN = EMA( up, n );
+Oo = IIf( up < down, up, down );
+Hh = Oo;
+Ll = IIf( up < down, down, up );
+Cc = Ll;
+
+BridgeT = (EMA(VAR66,1));
+	
+barcolor2 = IIf( Ref( VAR66, -1 ) < VAR66 , upcolor, IIf( up > down, upcolor, downcolor ) );
+PlotOHLC( Oo+3, hh+3, ll+3, Cc+3, "", barcolor2, styleCandle) ;
+PlotOHLC( -Oo-3, -hh-3, -ll-3, -Cc-3, "", barcolor2, styleCandle );
+//PlotOHLC(3+VAR66,3+VAR66,3+VAR66,7+VAR66, "", barcolor2, styleCandle ); 
+
+//PlotOHLC(3+bridget,3+bridget,3+bridget,7+bridget, "", IIf(bridget > Ref(bridget,-1),colorLime,colorRed), stylecandle);
+//PlotOHLC(-(3+bridget),-(3+bridget),-(3+bridget),-(7+bridget), "", IIf(bridget > Ref(bridget,-1),colorBrightGreen,colorBlue), styleLine);
+//Plot(-bridget, "", IIf(bridget > Ref(bridget,-1),colorCustom12,colorBlue), 1+4);
+lb=Param("lback",27,27,100,1);
+
+
+trend = (5)*(EMA(((Close-LLV(Low,lb))/(HHV(High,lb)-LLV(Low,lb)))*(100),5))-
+(3)*(EMA(EMA(((Close-LLV(Low,lb))/(HHV(High,lb)-LLV(Low,lb)))*(100),5),3))-
+EMA(EMA(EMA(((Close-LLV(Low,lb))/(HHV(High,lb)-LLV(Low,lb)))*(100),5),3),2);
+Buy1 = Cross(trend,5) ;
+PlotShapes( IIf( Buy1, shapeSmallSquare, shapeNone ), colorYellow, layer = 0, yposition = 0, offset = 3 ); 
+PlotShapes( IIf( Buy1, shapeSmallSquare, shapeNone ),colorYellow, layer = 0, yposition = 0, offset = -4 ); 
+
+VARA1=((Close>=Ref(Close,-1)) AND (Ref(Close,-1)>=Ref(Close,-2)) AND (Ref(Close,-1)<=Ref(Close,-3)) 
+AND (Ref(Close,-2)<=Ref(Close,-3)) AND ((Ref(Close,-4)>Ref(Close,-2)) OR (Ref(Close,-4)<=Ref(Close,-2)) 
+AND (Ref(Close,-5)>=Ref(Close,-3)))) OR ((Close>=Ref(Close,-1)) AND (Ref(Close,-1)<=Ref(Close,-2)) 
+AND (Close>=Ref(Close,-2)) AND ((Ref(Close,-3)>Ref(Close,-1)) OR (Ref(Close,-3)<=Ref(Close,-1)) 
+AND (Ref(Close,-4)>=Ref(Close,-2))));
+VARA2=LLV(Low,5);
+VARA3=HHV(High,5);
+VARA4=EMA(((Close-VARA2)/(VARA3-VARA2))*(100),4);
+VARA5=EMA((0.66699999)*(Ref(VARA4,-1))+(0.333)*(VARA4),2);
+VARA6=(VARA5<24) AND (Open<MA(Close,20));
+
+Buy2 =IIf(VARA1 AND (VARA6),30,0);
+Plot(Buy2, "",colorYellow ,2+4);
+Plot(-Buy2, "", colorYellow,2+4);
+PlotShapes( IIf( Buy2, shapeSmallSquare, shapeNone ), colorYellow, layer = 0, yposition = 0, offset = 3 ); 
+PlotShapes( IIf( Buy2, shapeSmallSquare, shapeNone ),colorYellow, layer = 0, yposition = 0, offset = -4 ); 
+//_N(Title =StrFormat("\\c02.BD VOZ  | {{VALUES}}")+EncodeColor(colorBrightGreen)+WriteIf(Buy2==30,"BuySignal-A","" )+EncodeColor(colorBrightGreen)+WriteIf(Buy1==1," | BuySignal-B",""));
+
+//Filter= (Buy1 OR Buy2) AND C>5 AND V>30000;
+
+_SECTION_END();
+
+_SECTION_BEGIN("explo");
+Buy=Buy1 OR Buy2 ;
+Filter=Buy AND C> 5 AND V>50000;
+color=IIf(C>O,colorGreen,colorRed);
+bcolor=IIf(Buy1 OR Buy2,colorGreen,1);
+AddColumn(Buy,"buy",1.1,bcolor);
+AddColumn(O,"open",1.1,color);
+AddColumn(C,"close",1.1,color);
+AddColumn(v,"volume",1.1,color);
+AddtextColumn(FullName(),"name");
+_SECTION_END();
+

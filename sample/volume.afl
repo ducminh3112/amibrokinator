@@ -1,0 +1,44 @@
+_SECTION_BEGIN("voltoday");
+Bar_today = BarsSince( Day() != Ref( Day(), -1 ) ) + 1;
+TodayVolume = Sum( V, Bar_today );
+
+TimeFrameSet( inDaily ); // switch to Daily minute frame
+/* MA now operates on Daily data, ma5 holds time-compressed 5 bar MA of Daily bars */
+ma20 = MA( V, 20 );
+TimeFrameRestore(); // restore time frame to original
+
+twentyDayAve = TimeFrameExpand( ma20, inDaily );
+
+
+/////////////////////
+//So sanh
+////////////////////
+bi = BarIndex();
+is_last_bar = bi == LastValue(bi);
+tn=Now(4);
+//session = 090000 <= tn AND tn <=113000 AND 130000 <= tn AND tn  <= 144500;
+thoigian= IIf( (090000 <= tn AND tn <=113000), tn-090000, IIf((130000 <= tn AND tn  <= 144500),tn - 130000+ 023000, 41500));
+thoigiantheophut =  60*floor(thoigian/10000) + floor(thoigian/100 - floor(thoigian/10000)*100);
+volduphong=  (V*255) /  thoigiantheophut;
+volang = IIf(is_last_bar, volduphong, Null);
+SetBarFillColor( IIf(volang >= twentyDayAve*1.2, colorViolet, colorYellow ) );
+Plot( volang, "vol ang", IIf( volang > twentyDayAve*1.2, colorYellow, colorYellow ), styleHistogram,Null,Null,1 );
+
+/////////////////////
+// Explore
+/////////////////////
+Filter = 1;
+dynamic_colour = IIf( TodayVolume > twentyDayAve, colorGreen, colorDefault );
+AddColumn( Bar_today, "Bar Today", 1.0 );
+AddColumn( V, "Volume this bar", 1.0 );
+AddColumn( TodayVolume, "Cum Volume Today", 1.0, colorDefault, dynamic_colour );
+AddColumn( twentyDayAve, "twentyDayAve", 1.0 );
+AddColumn(volduphong, "volumeduphong",1.2);
+AddColumn(thoigiantheophut, "thoigian",1.2);
+////////////////////
+AddColumn( tn, "tn", 1.0 );
+// Chart
+
+Plot( Volume, _DEFAULT_NAME(), IIf( C > O, ParamColor("Up Color", colorGreen ), ParamColor("Down Color", colorRed ) ), ParamStyle( "Style", styleHistogram | styleThick, maskHistogram  ) );
+Plot( twentyDayAve, "twentyDayAve", colorGreen, styleThick );
+_SECTION_END();
