@@ -12,5 +12,28 @@ Canh bao | RSI hien tai cham nguong (bien do 5%) HHV (highest high value) RSI ca
 Co hoi   | RSI hien tai cham nguong (bien do 5%) LLV (highest high value) RSI thap nhat trong 6 thang/ 1 nam / 3 nam
 */
 
-Periods = Param( "Periods", 14, 1, 200, 1 );
-Plot( RSI( periods), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style")  );
+QuaMua_perc =  Param( "Qua Mua (RSI>=)", 70, 1, 100, 1 );
+QuaBan_perc = Param( "Qua Ban (RSI<=)", 30, 1, 100, 1 );
+ChuKi_rsi = Param( "Chu ki RSI", 14, 1, 50, 1 );
+ChuKi_ma_rsi_1 = Param( "Chu ki MA (RSI)", 7, 1, 50, 1 );
+ChuKi_ma_rsi_2 = Param( "Chu ki MA (RSI)", 20, 1, 50, 1 );
+
+_Rsi = RSI( ChuKi_rsi);
+_Ma_Rsi_1 = MA(RSI( ChuKi_rsi), ChuKi_ma_rsi_1);
+_Ma_Rsi_2 = MA(RSI( ChuKi_rsi), ChuKi_ma_rsi_2);
+
+OverBuy = Rsi_ >= QuaMua_perc;
+OverSold = Rsi_ <= QuaBan_perc;
+Bear = Rsi_ < Ma_Rsi_;
+Bull = Rsi_ > MA_Rsi_;
+
+MuaRSI = (OverSold AND (Cross (Rsi_, MA_Rsi_))) OR (Cross (Rsi_, 30));
+BanRSI = (OverBuy AND (Cross (Ma_Rsi_, RSI_))) OR (Cross (70, Rsi_));
+
+
+Buy = MuaRSI;
+Sell = BanRSI;
+Filter = Buy OR Sell;
+AddTextColumn( FullName(), "Full name", 77 , colorDefault);
+AddColumn( Close, "Close", 1.2 );
+AddColumn( IIf( Buy, 66, 83 ), "Signal", formatChar );

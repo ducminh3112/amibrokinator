@@ -1,0 +1,5 @@
+_SECTION_BEGIN("Triple MA");
+P = ParamField("Price field",-1);
+_Ma_1 = Param("Periods", 15, 2, 200, 1 );
+Plot( MA( P, Periods ), _DEFAULT_NAME(), ParamColor( "Color", colorCycle ), ParamStyle("Style", styleLine | styleNoLabel ) | styleNoRescale ); 
+_SECTION_END();

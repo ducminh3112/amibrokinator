@@ -15,27 +15,48 @@ Co hoi   | RSI hien tai cham nguong (bien do 5%) LLV (highest high value) RSI th
 SetChartOptions(0,0,chartGrid30|chartGrid70);
 QuaMua_perc =  Param( "Qua Mua (RSI>=)", 70, 1, 100, 1 );
 QuaBan_perc = Param( "Qua Ban (RSI<=)", 30, 1, 100, 1 );
+
 ChuKi_rsi = Param( "Chu ki RSI", 14, 1, 50, 1 );
-ChuKi_ma_rsi = Param( "Chu ki MA(RSI)", 7, 1, 50, 1 );
+_Rsi = RSI( ChuKi_rsi);
+ChuKi_ma_rsi_1 = Param( "Chu ki MA1", 7, 1, 50, 1 );
+_Ma_Rsi_1 = MA(RSI( ChuKi_rsi), ChuKi_ma_rsi_1);
+ChuKi_ma_rsi_2 = Param( "Chu ki MA2", 20, 1, 50, 1 );
+_Ma_Rsi_2 = MA(RSI( ChuKi_rsi), ChuKi_ma_rsi_2);
 
-Rsi_ = RSI( ChuKi_rsi);
-Ma_Rsi_ = MA(RSI( ChuKi_rsi), ChuKi_ma_rsi);
+ChuKi_quayLui = Param( "Chu ki quay lui", 5, 1, 50, 1 );
+BienDo =  Param( "Bien do", 3, 0, 100, 1 );
+lamphang = True;
+for( i = 0; i < ChuKi_quayLui; i++ )
+{
+	prev_rsi = Ref(RSI( ChuKi_rsi), -i);
+	prev_maRsi_ngan = Ref( MA(RSI( ChuKi_rsi), ChuKi_ma_rsi_1), -i);
+	prev_maRsi_dai = Ref( MA(RSI( ChuKi_rsi), ChuKi_ma_rsi_2), -i);
+	
+	tb = (prev_rsi + prev_maRsi_ngan + prev_maRsi_dai)/3;
+	
+	/*printf("i = %g\n", i);
+	printf("prev_rsi = %f\n", prev_rsi);
+	printf("prev_maRsi_ngan = %f\n", prev_maRsi_ngan);
+	printf("prev_maRsi_dai = %f\n", prev_maRsi_dai);
+	printf("Bien do: [%f; %f]\n", tb*(100-biendo)/100, tb*(100+biendo)/100);*/
+	lamphang = lamphang AND !(prev_rsi < tb*(100-biendo)/100)  AND !(prev_rsi > tb*(100+biendo)/100)
+						 AND !(prev_maRsi_ngan < tb*(100-biendo)/100)  AND !(prev_maRsi_ngan > tb*(100+biendo)/100)
+						  AND !(prev_maRsi_dai < tb*(100-biendo)/100)  AND !(prev_maRsi_dai > tb*(100+biendo)/100);
+	/*printf("lamphang = %g\n",lamphang);
+	printf("#\n");*/
+}
+Plot( _Rsi, "RSI" , ParamColor( "RSI Color", colorCycle ), styleLine );
+Plot( _Ma_Rsi_1, "MA(RSI, 7)" , ParamColor( "MA(RSI, 7) Color", colorCycle ), styleLine );
+Plot( _Ma_Rsi_2, "MA(RSI, 20)" , ParamColor( "MA(RSI, 20) Color", colorCycle ), styleLine );
+PlotShapes( IIF( lamphang, shapeSmallSquare, shapeNone ), colorGreen );
 
-OverBuy = Rsi_ >= QuaMua_perc;
-OverSold = Rsi_ <= QuaBan_perc;
-Bear = Rsi_ < Ma_Rsi_;
-Bull = Rsi_ > MA_Rsi_;
-
-Mua = (OverSold AND (Cross (Rsi_, MA_Rsi_))) OR (Cross (Rsi_, 30));
-Ban = (OverBuy AND (Cross (Ma_Rsi_, RSI_))) OR (Cross (70, Rsi_));
-
-Buy = Mua;
-Sell = Ban;
-
-Filter = Mua OR Ban;
+llp = lamphang;
+Buy = lamphang;
+Sell = False;
+Filter = Buy OR Sell;
 AddTextColumn( FullName(), "Full name", 77 , colorDefault);
 AddColumn( Close, "Close", 1.2 );
-AddColumn( IIf( Buy, 66, 83 ), "Signal", formatChar );
-
-Plot( Rsi_, "RSI" , ParamColor( "RSI Color", colorCycle ), styleLine );
-Plot( Ma_Rsi_, "MA(RSI)" , ParamColor( "MA(RSI) Color", colorCycle ), styleLine );
+AddColumn( Volume, "Volume", 1.0 );
+TextList = "No signal\nBuy\nSell\nBuy and Sell";
+TextSelector = 1 * Buy + 2 * Sell; /* would give 0 if no signal, 1 if a buy, 2 if a sell, 3 if both buy and sell */
+AddMultiTextColumn( TextSelector, TextList, "Signal" );
